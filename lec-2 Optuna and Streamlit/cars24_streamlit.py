@@ -1,7 +1,8 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
-import joblib
+#import joblib
+import pickle
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
 
@@ -39,8 +40,14 @@ transmission_type = st.selectbox("Transmission Type", ["Manual", "Automatic"])
 seats = st.number_input("Seats", min_value=2, max_value=10, value=5, step=1)
 
 # Load the trained model and scaler
-model = joblib.load("cars24_model.joblib")
-scaler = joblib.load("scaler.pkl")
+#model = joblib.load("cars24_model.joblib")
+#scaler = joblib.load("scaler.pkl")
+
+with open("cars24_model.pkl", "rb") as f:
+	model = pickle.load(f)
+
+with open("scaler.pkl", "rb") as f:
+	scaler = pickle.load(f)
 
 # Create a pipeline that combines scaling and prediction
 pipeline = Pipeline([("scaler", scaler), ("model", model)])
