@@ -540,3 +540,32 @@ $ git help <command>            # full manual page
 $ git <command> -h              # quick flag summary
 $ git status                    # honestly — it usually tells you what to do next
 ```
+
+```
+gu () {
+	local commit_msg="$1" 
+	local branch="${2:-$(git rev-parse --abbrev-ref HEAD)}" 
+	local limit=$((99 * 1024 * 1024)) 
+	local big_files="" 
+	local f sz
+	while IFS= read -r f
+	do
+		[ -f "$f" ] || continue
+		sz=$(stat -f%z "$f" 2>/dev/null || stat -c%s "$f" 2>/dev/null)  || continue
+		if [ "$sz" -gt "$limit" ]
+		then
+			big_files+="  $f ($((sz / 1024 / 1024)) MB)"$'\n' 
+		fi
+	done < <(git ls-files --cached --others --exclude-standard)
+	if [ -n "$big_files" ]
+	then
+		echo "Aborting: files >99MB not in .gitignore (GitHub rejects >100MB):"
+		printf '%s' "$big_files"
+		echo "Add them to .gitignore (or use Git LFS), then retry."
+		return 1
+	fi
+	git add .
+	git commit -m "$commit_msg"
+	git push --set-upstream origin "$branch"
+}
+```
